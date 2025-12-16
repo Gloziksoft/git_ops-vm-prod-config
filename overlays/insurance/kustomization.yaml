@@ -5,7 +5,6 @@ kind: Kustomization
 # Odvolanie sa na oba základné priečinky
 resources:
 - ../../base/insurance-app # Iba Insurance Base
-- metallb-pool.yaml # Spoločný zdroj
 
 # Generovanie ConfigMap pre MetalLB (lokálny LoadBalancer)
 configMapGenerator:
