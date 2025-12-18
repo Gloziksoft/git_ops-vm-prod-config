@@ -6,7 +6,7 @@ metadata:
   labels:
     app: insurance-app
 spec:
-  replicas: 1
+  replicas: 2 # Pripravené pre HA na dvoch Node (VM)
   selector:
     matchLabels:
       app: insurance-app
@@ -15,10 +15,13 @@ spec:
       labels:
         app: insurance-app
     spec:
-      - labelSelector:
-        matchLabels:
-        app: insurance-app
-        topologyKey: "kubernetes.io/hostname"
+      affinity: # Pravidlo Antiaffinity pre rozloženie medzi VM
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: insurance-app
+            topologyKey: "kubernetes.io/hostname"
       containers:
       - name: insurance-app-container
         image: placeholder/insuranceapp:latest
