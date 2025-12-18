@@ -1,7 +1,14 @@
+# booking-app/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
   name: booking-app-service
 spec:
   type: LoadBalancer
+  selector:
+    app: booking-app
+  ports:
+    - protocol: TCP
+      port: 8081
+      targetPort: 8080
 
