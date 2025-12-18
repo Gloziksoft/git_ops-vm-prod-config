@@ -4,8 +4,3 @@ metadata:
   name: insurance-app-service
 spec:
   type: LoadBalancer
-  ports:
-    - name: http
-      port: 83          # Port, ktorý zadáš do prehliadača (localhost:83)
-      targetPort: 8080  # Väčšinou býva rovnaký ako pri prvej appke, ak sú to podobné microservices
-      protocol: TCP
