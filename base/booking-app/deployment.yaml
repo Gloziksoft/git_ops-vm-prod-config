@@ -7,7 +7,7 @@ metadata:
   labels:
     app: booking-app
 spec:
-  replicas: 2 # Pre vysokú dostupnosť
+  replicas: 1
   selector:
     matchLabels:
       app: booking-app
@@ -16,14 +16,10 @@ spec:
       labels:
         app: booking-app
     spec:
-      # Pravidlo Antiaffinity na rozloženie Podov medzi rôzne Node/VM
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchLabels:
-                app: booking-app
-            topologyKey: "kubernetes.io/hostname"
+      - labelSelector:
+        matchLabels:
+        app: booking-app
+        topologyKey: "kubernetes.io/hostname"
       containers:
       - name: placeholder/booking-app-container
         # Placeholder Image, ktorý prepíšeme v overlays/prod
