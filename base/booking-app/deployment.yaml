@@ -42,7 +42,7 @@ spec:
             memory: "512Mi" # Horná hranica, aby appka nezomrela pri štarte
             cpu: "500m"
         env:
-        # Spring Boot štandardne hľadá tieto premenné pre DB pripojenie
+        # Spring Boot konfigurácia pre pripojenie k Postgresu
         - name: SPRING_DATASOURCE_URL
           value: "jdbc:postgresql://postgresql-service:5432/booking_db"
         - name: SPRING_DATASOURCE_USERNAME
@@ -55,3 +55,11 @@ spec:
             secretKeyRef:
               name: postgresql-secret
               key: postgresql-password
+        
+        # FIX: Toto opraví chybu "Unable to determine Dialect" z tvojich logov
+        - name: SPRING_JPA_DATABASE_PLATFORM
+          value: "org.hibernate.dialect.PostgreSQLDialect"
+        
+        # Toto zabezpečí, že Hibernate automaticky vytvorí tabuľky v DB
+        - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+          value: "update"
