@@ -6,7 +6,7 @@ resources:
 
 images:
   - name: bookingapp           # Musí sedieť s 'image:' v base/deployment.yaml
-    newName: ghcr.io/Gloziksoft/booking-app # Tvoj skutočný GHCR image
+    newName: ghcr.io/gloziksoft/booking-app # Tvoj skutočný GHCR image
     newTag: latest
 
 patches:
