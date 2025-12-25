@@ -1,25 +1,21 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# Odporúčaná relatívna cesta k base
 resources:
   - ../../../base/booking-app
 
-# Aktualizácia image a tagu
 images:
-  - name: placeholder/bookingapp    # musí zodpovedať názvu v deployment.yaml
-    newName: your-private-repo/bookingapp
-    newTag: v1.0.0-prod
+  - name: bookingapp           # Musí sedieť s 'image:' v base/deployment.yaml
+    newName: ghcr.io/gloziksoft/booking-app # Tvoj skutočný GHCR image
+    newTag: latest
 
-# Patches so správnym targetom
 patches:
   - path: service-patch.yaml
     target:
       kind: Service
-      name: booking-app-service   # musí presne sedieť s base/service.yaml
+      name: booking-app-service
 
   - path: deployment-patch.yaml
     target:
       kind: Deployment
-      name: booking-app          # musí presne sedieť s base/deployment.yaml
-
+      name: booking-app-deployment # Musí presne sedieť s názvom v base!
