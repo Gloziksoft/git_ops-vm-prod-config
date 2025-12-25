@@ -31,28 +31,27 @@ spec:
 
       containers:
       - name: booking-app-container
-        image: bookingapp:latest
+        image: bookingapp:latest # Kustomize toto nahradí tvojím ghcr.io obrazom
         ports:
         - containerPort: 8081
         resources:
           requests:
-            memory: "128Mi"
+            memory: "128Mi" # Znížené, aby sa v klastri uvoľnilo miesto pre Postgres
             cpu: "100m"
           limits:
-            memory: "512Mi"
+            memory: "512Mi" # Horná hranica, aby appka nezomrela pri štarte
             cpu: "500m"
         env:
-        - name: DATABASE_HOST
-          value: postgresql-service
-        - name: DATABASE_USER
+        # Spring Boot štandardne hľadá tieto premenné pre DB pripojenie
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:postgresql://postgresql-service:5432/booking_db"
+        - name: SPRING_DATASOURCE_USERNAME
           valueFrom:
             secretKeyRef:
               name: postgresql-secret
               key: postgresql-user
-        - name: DATABASE_PASSWORD
+        - name: SPRING_DATASOURCE_PASSWORD
           valueFrom:
             secretKeyRef:
               name: postgresql-secret
               key: postgresql-password
-        - name: DATABASE_NAME
-          value: booking_db
