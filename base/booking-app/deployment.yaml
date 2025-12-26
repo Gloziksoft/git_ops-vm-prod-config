@@ -29,7 +29,7 @@ spec:
 
       containers:
       - name: booking-app-container
-        image: bookingapp:latest 
+        image: ghcr.io/gloziksoft/booking_easyapp/booking-app:latest 
         ports:
         - containerPort: 8080 # ZMENENÉ: Musí sedieť s Tomcatom v Spring Boote
         resources:
