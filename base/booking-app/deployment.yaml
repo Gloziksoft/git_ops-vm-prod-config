@@ -5,7 +5,7 @@ metadata:
   labels:
     app: booking-app
 spec:
-  replicas: 2
+  replicas: 1   # ⬅️ K3s / 1-node cluster
   selector:
     matchLabels:
       app: booking-app
@@ -14,47 +14,62 @@ spec:
       labels:
         app: booking-app
     spec:
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            podAffinityTerm:
-              labelSelector:
-                matchLabels:
-                  app: booking-app
-              topologyKey: "kubernetes.io/hostname"
-
       imagePullSecrets:
         - name: ghcr-login-secret
 
+      initContainers:
+        - name: wait-for-postgres
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z postgresql-service 5432; do
+                echo "Waiting for PostgreSQL..."
+                sleep 3
+              done
+
       containers:
-      - name: booking-app-container
-        image: ghcr.io/gloziksoft/booking_easyapp/booking-app:latest 
-        ports:
-        - containerPort: 8080 # ZMENENÉ: Musí sedieť s Tomcatom v Spring Boote
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "100m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        env:
-        - name: SPRING_DATASOURCE_URL
-          value: "jdbc:postgresql://postgresql-service:5432/booking_db"
-        - name: SPRING_DATASOURCE_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: postgresql-secret
-              key: postgresql-user
-        - name: SPRING_DATASOURCE_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: postgresql-secret
-              key: postgresql-password
-        - name: SPRING_JPA_DATABASE_PLATFORM
-          value: "org.hibernate.dialect.PostgreSQLDialect"
-        - name: SPRING_JPA_HIBERNATE_DDL_AUTO
-          value: "update"
-        - name: SPRING_PROFILES_ACTIVE
-          value: "prod"
+        - name: booking-app-container
+          image: ghcr.io/gloziksoft/booking_easyapp/booking-app:184e720
+          ports:
+            - containerPort: 8080
+
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgresql-service:5432/booking_db
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-secret
+                  key: postgresql-user
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-secret
+                  key: postgresql-password
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod
+
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 10
+

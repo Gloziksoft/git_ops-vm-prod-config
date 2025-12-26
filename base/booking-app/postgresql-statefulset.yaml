@@ -1,5 +1,3 @@
-# FILE: base/booking-app/postgresql-statefulset.yaml
-
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -8,7 +6,7 @@ metadata:
     app: postgresql
     tier: database
 spec:
-  serviceName: postgresql-service # Musí zodpovedať Service, ktorú urobíme neskôr
+  serviceName: postgresql-service
   replicas: 1
   selector:
     matchLabels:
@@ -20,49 +18,70 @@ spec:
         tier: database
     spec:
       containers:
-      - name: postgresql-container
-        image: postgres:14.7 # Stabilná verzia pre produkciu
-        ports:
-        - containerPort: 5432 # Štandardný port pre PostgreSQL
-          name: postgresql
-        
-        # Pripojenie na Volume Mount
-        volumeMounts:
-        - name: postgresql-volume
-          mountPath: /var/lib/postgresql/data # Štandardná cesta pre dáta PostgreSQL
-        
-        # --- Environment Variables pre PostgreSQL ---
-        # Využíva Secret, ktorý ešte len definujeme!
-        env:
-        - name: POSTGRES_USER
-          valueFrom:
-            secretKeyRef:
-              name: postgresql-secret
-              key: postgresql-user # Kľúč pre aplikačného používateľa
-        - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: postgresql-secret
-              key: postgresql-password # Kľúč pre heslo aplikačného používateľa
-        - name: POSTGRES_DB
-          value: booking_db
-        
-        # --- Limity na VM ---
+        - name: postgresql
+          image: postgres:14.7
+          ports:
+            - containerPort: 5432
+              name: postgresql
+
+          # ⬇️ DÔLEŽITÉ: správny layout dát
+          env:
+            - name: POSTGRES_DB
+              value: booking_db
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-secret
+                  key: postgresql-user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-secret
+                  key: postgresql-password
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+
+          volumeMounts:
+            - name: postgresql-volume
+              mountPath: /var/lib/postgresql/data
+
+          # ⬇️ KRITICKÉ: DB readiness
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - pg_isready -U $POSTGRES_USER
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 6
+
+          # ⬇️ KRITICKÉ: DB liveness
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - pg_isready -U $POSTGRES_USER
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 6
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+  volumeClaimTemplates:
+    - metadata:
+        name: postgresql-volume
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path
         resources:
           requests:
-            cpu: "100m"
-            memory: "128Mi"
-          limits:
-            cpu: "500m"
-            memory: "512Mi"
-            
-  # --- Definícia Perzistentného Úložiska (Persistent Volume Claim) ---
-  volumeClaimTemplates:
-  - metadata:
-      name: postgresql-volume
-    spec:
-      accessModes: [ "ReadWriteOnce" ] 
-      storageClassName: "local-path" # Použite storageClassName, ktoré podporuje váš klaster
-      resources:
-        requests:
-          storage: 1Gi # Požadovaná veľkosť disku
+            storage: 1Gi
+
