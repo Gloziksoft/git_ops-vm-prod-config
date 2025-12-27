@@ -11,4 +11,3 @@ resources:
   - db-service.yaml
   - postgresql-statefulset.yaml
   - secrets/postgresql-secret.yaml
-  - ingress.yaml
