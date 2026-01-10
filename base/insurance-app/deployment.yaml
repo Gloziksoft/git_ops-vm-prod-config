@@ -32,7 +32,7 @@ spec:
       containers:
       - name: insurance-app-container
         # Opravená cesta k obrazu podľa tvojho balíčka
-        image: ghcr.io/gloziksoft/insuranceapp/insurance-app:latest
+        image: ghcr.io/gloziksoft/insuranceapp/insurance-app:prod
         ports:
         - containerPort: 8080
         

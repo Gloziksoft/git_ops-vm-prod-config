@@ -31,7 +31,7 @@ spec:
 
       containers:
         - name: booking-app-container
-          image: ghcr.io/gloziksoft/booking_easyapp/booking-app:latest
+          image: ghcr.io/gloziksoft/booking_easyapp/booking-app:prod
           ports:
             - containerPort: 8080
 
