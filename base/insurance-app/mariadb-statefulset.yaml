@@ -21,58 +21,49 @@ spec:
         tier: database
 
     spec:
-      # 🔽 ConfigMap s init.sql
-      volumes:
-        - name: mariadb-init
-          configMap:
-            name: mariadb-init-sql
-
       containers:
-      - name: mariadb-container
-        image: mariadb:10.11
-        ports:
-          - containerPort: 3306
-            name: mariadb
+        - name: mariadb-container
+          # ✅ TVOJ DB IMAGE S init.sql
+          image: ghcr.io/gloziksoft/insurance-db:prod
 
-        volumeMounts:
-          # 📦 databázové dáta
-          - name: mariadb-volume
-            mountPath: /var/lib/mysql
+          ports:
+            - containerPort: 3306
+              name: mariadb
 
-          # 📥 SQL záloha – spustí sa IBA pri prvom štarte
-          - name: mariadb-init
-            mountPath: /docker-entrypoint-initdb.d
-            readOnly: true
+          volumeMounts:
+            # 📦 PERSISTENTNÉ DÁTA
+            - name: mariadb-volume
+              mountPath: /var/lib/mysql
 
-        env:
-          - name: MARIADB_ROOT_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: mariadb-secret
-                key: mariadb-root-password
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-secret
+                  key: mariadb-root-password
 
-          - name: MARIADB_USER
-            valueFrom:
-              secretKeyRef:
-                name: mariadb-secret
-                key: mariadb-user
+            - name: MARIADB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-secret
+                  key: mariadb-user
 
-          - name: MARIADB_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: mariadb-secret
-                key: mariadb-password
+            - name: MARIADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-secret
+                  key: mariadb-password
 
-          - name: MARIADB_DATABASE
-            value: insurance_db
+            - name: MARIADB_DATABASE
+              value: insurance_db
 
-        resources:
-          requests:
-            cpu: "100m"
-            memory: "128Mi"
-          limits:
-            cpu: "500m"
-            memory: "512Mi"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
 
   volumeClaimTemplates:
     - metadata:
