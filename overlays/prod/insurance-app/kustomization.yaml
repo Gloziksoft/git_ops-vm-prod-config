@@ -4,7 +4,7 @@ kind: Kustomization
 # 1. Base: Odkaz na základné manifesty
 resources:
   - ../../../base/insurance-app
-  - ingress.yaml
+  
 
 # 2. Images: Prepísanie Image kontajnera pre produkciu
 images:
