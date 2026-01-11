@@ -1,5 +1,3 @@
-# FILE: base/insurance-app/mariadb-statefulset.yaml
-
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -7,51 +5,67 @@ metadata:
   labels:
     app: mariadb
     tier: database
+
 spec:
-  serviceName: mariadb-service # Musí zodpovedať Service (db-service.yaml)
+  serviceName: mariadb-service
   replicas: 1
+
   selector:
     matchLabels:
       app: mariadb
+
   template:
     metadata:
       labels:
         app: mariadb
         tier: database
+
     spec:
+      # 🔽 ConfigMap s init.sql
+      volumes:
+        - name: mariadb-init
+          configMap:
+            name: mariadb-init-sql
+
       containers:
       - name: mariadb-container
-        image: mariadb:10.11 # Stabilná verzia pre produkciu
+        image: mariadb:10.11
         ports:
-        - containerPort: 3306
-          name: mariadb
-        
+          - containerPort: 3306
+            name: mariadb
+
         volumeMounts:
-        - name: mariadb-volume
-          mountPath: /var/lib/mysql 
-        
-        # --- Environment Variables pre MariaDB ---
+          # 📦 databázové dáta
+          - name: mariadb-volume
+            mountPath: /var/lib/mysql
+
+          # 📥 SQL záloha – spustí sa IBA pri prvom štarte
+          - name: mariadb-init
+            mountPath: /docker-entrypoint-initdb.d
+            readOnly: true
+
         env:
-        # Používa Secret, ktorý ešte len definujeme!
-        - name: MARIADB_ROOT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mariadb-secret
-              key: mariadb-root-password 
-        - name: MARIADB_USER
-          valueFrom:
-            secretKeyRef:
-              name: mariadb-secret
-              key: mariadb-user
-        - name: MARIADB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mariadb-secret
-              key: mariadb-password
-        - name: MARIADB_DATABASE
-          value: insurance_db
-        
-        # --- Limity na VM ---
+          - name: MARIADB_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mariadb-secret
+                key: mariadb-root-password
+
+          - name: MARIADB_USER
+            valueFrom:
+              secretKeyRef:
+                name: mariadb-secret
+                key: mariadb-user
+
+          - name: MARIADB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mariadb-secret
+                key: mariadb-password
+
+          - name: MARIADB_DATABASE
+            value: insurance_db
+
         resources:
           requests:
             cpu: "100m"
@@ -59,16 +73,13 @@ spec:
           limits:
             cpu: "500m"
             memory: "512Mi"
-            
-  # --- Definícia Perzistentného Úložiska (Persistent Volume Claim) ---
+
   volumeClaimTemplates:
-  - metadata:
-      name: mariadb-volume
-    spec:
-      accessModes: [ "ReadWriteOnce" ] 
-      # Zvoľte triedu úložiska pre K3s/Minikube. Ak používate K3s, 'local-path' je default.
-      # Použijeme 'standard', čo je bežný placeholder.
-      storageClassName: "local-path" 
-      resources:
-        requests:
-          storage: 5Gi
+    - metadata:
+        name: mariadb-volume
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: "local-path"
+        resources:
+          requests:
+            storage: 5Gi

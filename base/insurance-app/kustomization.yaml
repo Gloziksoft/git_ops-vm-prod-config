@@ -11,3 +11,4 @@ resources:
 - mariadb-statefulset.yaml
 - mariadb-secret.yaml # Váš pôvodný súbor mal názov mail-secret.yaml, ale predpokladám, že slúži pre DB heslo
 - db-service.yaml
+- mariadb-init-configmap.yaml
